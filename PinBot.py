@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 import datetime
+import os
+from os import environ
 
 #color values
 GREEN_PRINT = '\033[92m'
@@ -12,13 +14,14 @@ client = discord.Client(client_prefix='pin.')
 PinsChannel = "pinned-content"
 PinContentChannel = None
 
-FT_zip = 'https://discord.com/assets/4f27cbf7f975daa32fe7c8dec19ce2de.svg'
-FT_file = 'https://discord.com/assets/66084381f55f4238d69e5cbe3b8dc42e.svg'
+FT_zip = 'https://cdn.discordapp.com/attachments/852053611760451626/852698441124675584/FileType_Zip.png'
+FT_file = 'https://cdn.discordapp.com/attachments/852053611760451626/852698437995986944/FileType_Generic.png'
 
 async def FindChannel(CTF):
+    print(f'Pinbot: attempting to find channel {CTF}')
     for channel in client.get_all_channels():
         if(channel.name == CTF):
-            print(channel.name)
+            print('Pinbot: channel found')
             return channel.id
     return None
 
@@ -44,70 +47,78 @@ async def on_raw_reaction_add(payload):
         msgchannel = await client.fetch_channel(payload.channel_id)
         origin = await msgchannel.fetch_message(payload.message_id)
 
-
         emb = discord.Embed(color=discord.Color.from_rgb(198, 120, 221))
-        dc = origin.created_at.now().strftime("%Y/%m/%d %H:%M:%S")
-        emb.title = f'pinned from #{origin.channel.name}'
-        emb.set_author(name=origin.author.name, icon_url=origin.author.avatar_url)
-        emb.add_field(name=f'sent: {dc}', value=f'[Pin Origin]({origin.jump_url})', inline=False)
+        datet = str(origin.created_at)
+        dc = datet[0:len(datet)-7]
+        ct = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        emb.title = f'{payload.member.name} pinned from #{origin.channel.name}'
+        emb.set_author(name=payload.member.name, icon_url=payload.member.avatar_url)
+        emb.add_field(name=f'sent: {dc}, pinned: {ct}', value=f'[Pin Origin]({origin.jump_url})', inline=False)
+        emb.add_field(name='Author:', value=origin.author.name, inline=False)
 
-
-        for a in origin.attachments:
-            emb.add_field(name=f'msg.file: ', value=a.filename, inline=False)
-            emb.add_field(name=f'msg.url', value=a.url, inline=False)
-            emb.set_thumbnail(url='./FileType_Generic.png')
-        #if(len(origin.attachments) == 0 and len(origin.embeds) == 0 and origin.content != ''):
-        #    emb.add_field(name="message.content", value=origin.content, inline=False)
-        #elif()
-
-
-        #for a in origin.attachments:
-        #    if(a.content_type == 'image/png'):
-        #        emb.set_image(url=a.url)
-        #    if('text' in a.content_type):       
-
-        print(origin.attachments)
-        print(len(origin.attachments))
-        print(origin.content)
-        print(origin.embeds)
-        print('-------------')
-        #for a in origin.attachments:
-        #    emb.set_image(url=a.url)
-
-        #print(origin.attachments[0].content_type)
-        #emb.set_image(url=origin.embeds[0].image.url)
-
-        '''
-        if(len(origin.embeds) != 0):
-            for current in origin.embeds:
-                emb.add_field(name='embed.video', value=current.video.url, inline=True)
-                emb.add_field(name='embed.desc', value=current.description, inline=True)
-                emb.add_field(name='embed.title', value=current.title, inline=True)
-                emb.set_thumbnail(url=current.thumbnail.url)
-                emb.set_image(url=current.image.url)
+        if(len(origin.attachments) != 0):
+            for a in origin.attachments:
+                emb.add_field(name=f'FileName: ', value=a.filename, inline=False)
+                emb.add_field(name=f'FileURL:', value=a.url, inline=False)
+                emb.set_thumbnail(url=FT_zip if('zip' in a.content_type) else FT_file)
+                try: emb.set_image(url=a.url)
+                except: pass
+        elif(len(origin.embeds) != 0):
+            for e in origin.embeds:
+                emb.add_field(name=e.url, value=e.description, inline=False)
+                emb.add_field(name='Image:', value=e.image.url, inline=True)
+                emb.add_field(name='Thumbnail:', value=e.thumbnail.url, inline=True)
+                emb.add_field(name='Video:', value=e.video.url, inline=True)
+                try: emb.set_thumbnail(url=e.thumbnail.url)
+                except: pass
         else:
-            emb.add_field(name="embed.content", value=origin.content, inline=False)
-        '''
-        print("send file")
+            emb.add_field(name="Content", value=origin.content, inline=False)
+        print('Pinbot: embed sent')
         await PinContentChannel.send(embed=emb)
-        #await PinContentChannel.send(embed=emb)
-        #msg = discord.Embed(color=discord.Colour.from_rgb(198, 120, 221))
-        #dc = origin.created_at.now()
-        #msg.title = f'pinned from: #{origin.channel.name}'
-        #msg.set_author(name=origin.author.name, icon_url=origin.author.avatar_url)
-        #msg.add_field(name=f'sent: {dc.strftime("%Y/%m/%d %H:%M:%S")}', value=f"[Pin Origin]({origin.jump_url})", inline=False)
-        #for e in origin.embeds:
-        #    msg.add_field(name=e.url, value=e.description, inline=False)
-        #    msg.add_field(name='embed.image', value=e.image.url, inline=True)
-        #    msg.add_field(name='embed.thumbnail', value=e.thumbnail.url, inline=True)
-        #    msg.add_field(name='embed.video', value=e.video.url, inline=True)
-        #await PinContentChannel.send(embed=msg)
-        
-        #await PinContentChannel.create_webhook(name="Message", avatar=origin.author.avatar)
-        #print(origin)
-        #await PinContentChannel.send()
-        #await PinContentChannel.send(content=origin.content, embed=origin.embeds)
 
-#region
-client.run('ODE2MTAxNTA4NTQxOTcyNTMw.YD2Dwg.BB-puKouhfDtycXcV1KbDfK7dKc')
-#endregion
+async def GetFromPins(message, msg):
+    print(f'PinBot: {msg}')
+    await message.channel.send(f'Finding channel: {msg[9:len(msg)]}')
+    try:
+        TargetChannel = int(msg[msg.index('#')+1:len(msg)-1])
+    except:
+        await message.channel.send('Couldnt find channel')
+        return
+    Channel = client.get_channel(TargetChannel)
+    ChannelPinned = await Channel.pins()
+    await message.channel.send(f'Found Channel {Channel.name} with {len(ChannelPinned)} pins')
+    for pins in ChannelPinned:
+        await pins.add_reaction('📌')
+    await message.channel.send('finished')
+
+@client.event
+async def on_message(message):
+    msg = message.content.lower()
+    if('pin.from' in msg):
+        await GetFromPins(message, msg)
+
+async def ReactionOnMessage(msg, reaction):
+    for r in msg.reactions:
+        if(r.emoji == reaction):
+            return True
+    return False
+
+async def FindOriginMsg(message):
+    for e in message.embeds:
+        for f in e.fields:
+            val = str(f.value)
+            if('(' in val):
+                link = val[val.index('(')+1:len(val)-1].split('/')
+                return await client.get_guild(int(link[-3])).get_channel(int(link[-2])).fetch_message(int(link[-1]))
+    return None
+
+@client.event
+async def on_message_delete(message):
+    print('Pinbot: linking removal')
+    global PinContentChannel
+    if(message.channel == PinContentChannel):
+        link = await FindOriginMsg(message)
+        if(link != None):
+            await link.clear_reaction('📌')
+
+client.run()
