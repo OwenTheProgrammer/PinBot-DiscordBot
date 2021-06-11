@@ -97,7 +97,7 @@ async def on_message(message):
     if('pin.from' in msg):
         await GetFromPins(message, msg)
     
-    if not(message.guild):
+    if not(message.guild and message.author.bot):
         with open('dmreply1.mp4', 'rb') as filestream:
             await message.channel.send(file=discord.File(filestream, 'dmreply1.mp4'))
 
