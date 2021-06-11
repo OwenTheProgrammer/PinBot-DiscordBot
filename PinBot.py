@@ -16,6 +16,7 @@ PinsChannel = environ['TARGET_CHANNEL']
 FT_zip = environ['FT_ZIP']
 FT_file = environ['FT_FILE']
 PinContentChannel = None
+PinContentCID = None
 
 async def FindChannel(CTF):
     print(f'Pinbot: attempting to find channel {CTF}')
@@ -29,23 +30,28 @@ async def FindChannel(CTF):
 async def on_ready():
     global PinsChannel
     global PinContentChannel
-    PinChannelID = await FindChannel(PinsChannel)
-    if(PinChannelID == None):
+    global PinContentCID
+    PinContentCID = await FindChannel(PinsChannel)
+    if(PinContentCID == None):
         print(f'{ERROR_PRINT}Couldnt find channel: {PinsChannel}')
         quit()
     else:
         print(f'{GREEN_PRINT}Found channel: {PinsChannel}')
-    PinContentChannel = await client.fetch_channel(PinChannelID)
+    PinContentChannel = await client.fetch_channel(PinContentCID)
     print("the bot is running")
 
 @client.event
 async def on_raw_reaction_add(payload):
     global PinContentChannel
+    global PinContentCID
     global FT_zip
     global FT_file
-    if(payload.emoji.name == "📌"):
+    if(payload.emoji.name == "📌" and payload.channel_id != PinContentCID):
         msgchannel = await client.fetch_channel(payload.channel_id)
         origin = await msgchannel.fetch_message(payload.message_id)
+
+        if(payload.channel == PinContentChannel):
+            return
 
         emb = discord.Embed(color=discord.Color.from_rgb(198, 120, 221))
         datet = str(origin.created_at)
