@@ -50,9 +50,6 @@ async def on_raw_reaction_add(payload):
         msgchannel = await client.fetch_channel(payload.channel_id)
         origin = await msgchannel.fetch_message(payload.message_id)
 
-        if(payload.channel == PinContentChannel):
-            return
-
         emb = discord.Embed(color=discord.Color.from_rgb(198, 120, 221))
         datet = str(origin.created_at)
         dc = datet[0:len(datet)-7]
