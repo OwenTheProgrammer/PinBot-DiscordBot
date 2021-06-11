@@ -11,11 +11,11 @@ COMMAND = '\033[96m'
 
 client = discord.Client(client_prefix='pin.')
 
-PinsChannel = "pinned-content"
+ClientKey = environ['BOT_API_KEY']
+PinsChannel = environ['TARGET_CHANNEL']
+FT_zip = environ['FT_ZIP']
+FT_file = environ['FT_FILE']
 PinContentChannel = None
-
-FT_zip = 'https://cdn.discordapp.com/attachments/852053611760451626/852698441124675584/FileType_Zip.png'
-FT_file = 'https://cdn.discordapp.com/attachments/852053611760451626/852698437995986944/FileType_Generic.png'
 
 async def FindChannel(CTF):
     print(f'Pinbot: attempting to find channel {CTF}')
@@ -121,4 +121,4 @@ async def on_message_delete(message):
         if(link != None):
             await link.clear_reaction('📌')
 
-client.run()
+client.run(ClientKey)

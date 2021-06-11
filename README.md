@@ -1,1 +1,1 @@
-# PinBot-DiscordBot
+# Pin-DiscordBot
